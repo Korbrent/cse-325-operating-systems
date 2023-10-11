@@ -33,6 +33,6 @@ SYSCALL(thread_create)
 SYSCALL(thread_join)
 SYSCALL(thread_exit)
 SYSCALL(lock_init)
-SYSCALL(lock_aquire)
+SYSCALL(lock_acquire)
 SYSCALL(lock_release)
 

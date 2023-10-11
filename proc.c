@@ -542,11 +542,11 @@ procdump(void)
 
 
 int
-thread_create(void (*fcn) (void*), void *arg, void *stack){
+thread_create(void (*fcn) (void*), void *stack, void *arg){
   struct proc *proc = myproc();
 
 
-  if ((uint)stack % PGSIZE != 0 || (uint)stack + PGSIZE > *(proc->sz)) {
+  if ((uint)stack % PGSIZE != 0 || (uint)stack + PGSIZE > (proc->sz)) {
     return -1;
   }
 
@@ -704,7 +704,7 @@ lock_init(lock_t *lock){
 }
 
 int
-lock_aquire(lock_t *lock){
+lock_acquire(lock_t *lock){
   struct proc *curproc = myproc();
 
   // acquire ptable lock

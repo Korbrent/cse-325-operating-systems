@@ -23,11 +23,11 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-int thread_create(void(fn *) (void*), void *stack, void *arg);
+int thread_create(void (*fn) (void*), void *stack, void *arg);
 int thread_join(void);
 int thread_exit(void) __attribute__((noreturn));
 int lock_init(lock_t *lock);
-int lock_aquire(lock_t *lock);
+int lock_acquire(lock_t *lock);
 int lock_release(lock_t *lock);
 
 // ulib.c

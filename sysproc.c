@@ -118,7 +118,7 @@ sys_lock_init(void){
     // set lock to lock_int
     // remember to type cast it
 
-    return lock_int(lock);
+    return lock_init(lock);
 }
 
 int
