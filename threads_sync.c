@@ -1,6 +1,7 @@
 #include "types.h"
 #include "stat.h"
 #include "user.h"
+#include "sleeplock.h"
 
 struct balance {
     char name[32];
