@@ -26,9 +26,9 @@ int uptime(void);
 int thread_create(void (*fcn) (void*), void *stack, void *arg);
 int thread_join(void);
 int thread_exit(void) __attribute__((noreturn));
-int lock_init(lock_t *lock);
-int lock_acquire(lock_t *lock);
-int lock_release(lock_t *lock);
+int lock_init(struct sleeplock* lock);
+int lock_acquire(struct sleeplock* lock);
+int lock_release(struct sleeplock* lock);
 
 // ulib.c
 int stat(const char*, struct stat*);

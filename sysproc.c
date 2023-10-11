@@ -114,26 +114,21 @@ sys_thread_exit(void){
 
 int
 sys_lock_init(void){
-    int lock_int;
-    lock_t *lock;
-
-    // use argint
-    // set lock to lock_int
-    // remember to type cast it
-
+    struct sleeplock *lock;
+    argptr(0, (char**)&lock, sizeof(lock));
     return lock_init(lock);
 }
 
 int
 sys_lock_acquire(void){
-    int lock_int;
-    lock_t *lock;
+    struct sleeplock *lock;
+    argptr(0, (char**)&lock, sizeof(lock));
     return lock_acquire(lock);
 }
 
 int
 sys_lock_release(void){
-    int lock_int;
-    lock_t *lock;
+    struct sleeplock *lock;
+    argptr(0, (char**)&lock, sizeof(lock));
     return lock_release(lock);
 }

@@ -124,9 +124,9 @@ int             thread_create(void (*fcn) (void*), void *stack, void *arg);
 int             thread_join(void);
 void            thread_exit(void);
 int             join(void);
-int             lock_init(lock_t *lock);
-int             lock_aquire(lock_t *lock);
-int             lock_release(lock_t *lock);
+int             lock_init(struct sleeplock *lock);
+int             lock_acquire(struct sleeplock *lock);
+int             lock_release(struct sleeplock *lock);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

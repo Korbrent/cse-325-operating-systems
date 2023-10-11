@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "sleeplock.h"
 
 struct 
 {
@@ -697,60 +698,21 @@ thread_exit(void)
 }
 
 int
-lock_init(lock_t *lock){
-  // Set lock to 0
-  *lock = 0;
-  // Run init_lock(lock)
-  initlock(&locker.sl, (char *)lock);
+lock_init(struct sleeplock *lock){
+  initsleeplock(lock, "a lab4 mutex");
+  return lock == 0 ? -1 : 0;
+}
 
-  // set locker's pid to 0
-  locker.pid = 0;
+int
+lock_acquire(struct sleeplock *lock){
+  if (lock == 0 || lock->name == 0) return -1;
+  acquiresleep(lock);
   return 0;
 }
 
 int
-lock_acquire(lock_t *lock){
-  struct proc *curproc = myproc();
-
-  // acquire ptable lock
-  acquire(&ptable.lock);
-  // set mutex to 1
-  curproc->mutex = 1;
-  // release ptable lock
-  release(&ptable.lock);
-  
-  acquire(&locker.sl);
-  // set lock to 0
-  while(*lock != 0){
-    yield();
-  }
-  // set locker's pid to curproc's pid
-  locker.pid = curproc->pid;
-  // release locker's spinlock
-  release(&locker.sl);
-
-  return 0;
-}
-
-int
-lock_release(lock_t *lock){
-  struct proc *p;
-  struct proc *curproc = myproc();
-
-  // acquire locker's spinlock
-  acquire(&locker.sl);
-  // set lock to 0
-  *lock = 0;
-  // set mutex to 0
-  // release locker's spinlock
-  release(&locker.sl);
-
-  acquire(&ptable.lock);
-  // loop through ptable
-  // inside loop: if mutex == 1 call wakeup1 function
-  // release ptable lock
-
-  // set locker's pid to 0
-
+lock_release(struct sleeplock *lock){
+  if (lock == 0 || lock->name == 0) return -1;
+  releasesleep(lock);
   return 0;
 }
