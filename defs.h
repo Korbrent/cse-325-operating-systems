@@ -120,6 +120,13 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+int             thread_create(void(*fn) (void*), void *stack, void *arg);
+int             thread_join(void);
+int             thread_exit(void);
+void            join(void);
+int             lock_init(lock_t *lock);
+int             lock_aquire(lock_t *lock);
+int             lock_release(lock_t *lock);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

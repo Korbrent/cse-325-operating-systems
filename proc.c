@@ -7,6 +7,13 @@
 #include "proc.h"
 #include "spinlock.h"
 
+struct 
+{
+  struct spinlock sl;
+  int pid;  
+} locker;
+
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -531,4 +538,206 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+
+int
+thread_create(void (*fcn) (void*), void *arg, void *stack){
+  struct proc *proc = myproc();
+
+
+  if ((uint)stack % PGSIZE != 0 || (uint)stack + PGSIZE > *(proc->sz)) {
+    return -1;
+  }
+
+  if((uint) stack % PGSIZE){
+    stack = stack = (4096 - (uint) stack % PGSIZE);
+  }
+  
+  
+  int i, pid;
+  struct proc *np;
+
+  // Allocate process.
+  if((np = allocproc()) == 0)
+    return -1;
+
+  // Copy process state from p.
+  np->pgdir = proc->pgdir;
+  np->sz = proc->sz;
+  np->parent = proc;
+  *np->tf = *proc->tf;
+
+  // Clear %eax so that fork returns 0 in the child.
+  np->tf->eax = 0;
+  
+  np->ustack = stack;
+  *((uint*)(stack + PGSIZE - sizeof(uint))) = (uint)arg;
+  *((uint*)(stack + PGSIZE - 2 * sizeof(uint))) = 0xffffffff;
+  np->tf->esp = (uint)stack + PGSIZE - 2 * sizeof(uint);
+  np->tf->eip = (uint)fcn;
+
+  for(i = 0; i < NOFILE; i++)
+    if(proc->ofile[i])
+      np->ofile[i] = filedup(proc->ofile[i]);
+  np->cwd = idup(proc->cwd);
+ 
+  pid = np->pid;
+  np->state = RUNNABLE;
+  safestrcpy(np->name, proc->name, sizeof(proc->name));
+  
+  np->reference_count = proc->reference_count;
+  *(np->reference_count) = *(np->reference_count) + 1;
+  return pid;
+}
+
+int
+thread_join(void){
+  int thread_id = join();
+  return thread_id;
+}
+
+int
+join(void)
+{
+  struct proc *proc = myproc();
+  // if ((uint) stack + sizeof(uint) > *(proc->sz)) {
+  //   return -1;
+  // }
+  
+  struct proc *p;
+  int havekids, pid;
+
+  acquire(&ptable.lock);
+  for(;;){
+    // Scan through table looking for zombie children.
+    havekids = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->parent != proc || p->pgdir != proc->pgdir)
+        continue;
+      havekids = 1;
+      if(p->state == ZOMBIE){
+        // Found one.
+        // *stack = p->ustack;
+        pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+        p->state = UNUSED;
+        p->highPriorityTime = 0;
+        p->lowPriorityTime = 0;
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        release(&ptable.lock);
+        *(p->reference_count) = *(p->reference_count) - 1;
+        return pid;
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || proc->killed){
+      release(&ptable.lock);
+      return -1;
+    }
+
+    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+    sleep(proc, &ptable.lock);  //DOC: wait-sleep
+  }
+}
+
+
+// Exit the current process.  Does not return.
+// An exited process remains in the zombie state
+// until its parent calls wait() to find out it exited.
+void
+thread_exit(void)
+{
+  struct proc *curproc = myproc();
+  struct proc *p;
+  int fd;
+
+  if(curproc == initproc)
+    panic("init exiting");
+
+  // Close all open files.
+  for(fd = 0; fd < NOFILE; fd++){
+    if(curproc->ofile[fd]){
+      fileclose(curproc->ofile[fd]);
+      curproc->ofile[fd] = 0;
+    }
+  }
+
+  begin_op();
+  iput(curproc->cwd);
+  end_op();
+  curproc->cwd = 0;
+
+  acquire(&ptable.lock);
+
+  // Parent might be sleeping in wait().
+  wakeup1(curproc->parent);
+
+  // Pass abandoned children to init.
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->parent == curproc || p->pgdir != curproc->pgdir){
+      p->parent = initproc;
+      if(p->state == ZOMBIE)
+        wakeup1(initproc);
+    }
+  }
+
+  // Jump into the scheduler, never to return.
+  curproc->state = ZOMBIE;
+  sched();
+  panic("zombie exit");
+}
+
+int
+lock_init(lock_t *lock){
+  // Set lock to 0
+
+  // Run init_lock(lock)
+
+  // set locker's pid to 0
+  return 0;
+}
+
+int
+lock_aquire(lock_t *lock){
+  struct proc *curproc = myproc();
+
+  // acquire ptable lock
+  // set mutex to 1
+  // release ptable lock
+  
+  // acquire locker's spinlock
+  // set lock to 0
+  while(*lock = 1){
+    yield();
+  }
+  // set locker's pid to curproc's pid
+  // release locker's spinlock
+
+  return 0;
+}
+
+int
+lock_release(lock_t *lock){
+  struct proc *p;
+  struct proc *curproc = myproc();
+
+  // acquire locker's spinlock
+  // set lock to 0
+  *lock = 0;
+  // set mutex to 0
+  // release locker's spinlock
+
+  // loop through ptable
+  // inside loop: if mutex == 1 call wakeup1 function
+  // release ptable lock
+
+  // set locker's pid to 0
+
+  return 0;
 }

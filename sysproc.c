@@ -89,3 +89,48 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+
+int
+sys_thread_create(void){
+    void (*fcn);
+    void *stack;
+    void *arg;
+    return thread_create(fcn, stack, arg);
+}
+
+int sys_thread_join(void){
+    return thread_join();
+}
+
+int
+sys_thread_exit(void){
+    thread_exit();
+    return 0;
+}
+
+int
+sys_lock_init(void){
+    int lock_int;
+    lock_t *lock;
+
+    // use argint
+    // set lock to lock_int
+    // remember to type cast it
+
+    return lock_int(lock);
+}
+
+int
+sys_lock_acquire(void){
+    int lock_int;
+    lock_t *lock;
+    return lock_acquire(lock);
+}
+
+int
+sys_lock_release(void){
+    int lock_int;
+    lock_t *lock;
+    return lock_release(lock);
+}
