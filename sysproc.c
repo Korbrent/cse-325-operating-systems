@@ -96,6 +96,9 @@ sys_thread_create(void){
     void (*fcn);
     void *stack;
     void *arg;
+    argptr(0, &fcn, sizeof (fcn));
+    argptr(1, &stack, sizeof (void*));
+    argptr(2, &arg, sizeof (void*));
     return thread_create(fcn, stack, arg);
 }
 

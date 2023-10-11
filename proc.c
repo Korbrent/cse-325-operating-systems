@@ -546,13 +546,16 @@ thread_create(void (*fcn) (void*), void *stack, void *arg){
   struct proc *proc = myproc();
 
 
-  if ((uint)stack % PGSIZE != 0 || (uint)stack + PGSIZE > (proc->sz)) {
+  // NB: remove check that the stack pointer does not exists on a page boundary
+  // This was causing issues where malloc wouldn't return a block of memory that
+  // existed on said page boundary which cause the thread to not run
+  if (/* (uint)stack % PGSIZE != 0 || */ (uint)stack + PGSIZE > (proc->sz)) {
     return -1;
   }
 
-  if((uint) stack % PGSIZE){
-    stack = stack = (4096 - (uint) stack % PGSIZE);
-  }
+  /* if((uint) stack % PGSIZE) {
+    stack = (4096 - (uint) stack % PGSIZE);
+  } */
   
   
   int i, pid;
@@ -587,7 +590,7 @@ thread_create(void (*fcn) (void*), void *stack, void *arg){
   safestrcpy(np->name, proc->name, sizeof(proc->name));
   
   np->reference_count = proc->reference_count;
-  *(np->reference_count) = *(np->reference_count) + 1;
+  np->reference_count = np->reference_count + 1;
   return pid;
 }
 
@@ -630,7 +633,7 @@ join(void)
         p->name[0] = 0;
         p->killed = 0;
         release(&ptable.lock);
-        *(p->reference_count) = *(p->reference_count) - 1;
+        p->reference_count = p->reference_count - 1;
         return pid;
       }
     }

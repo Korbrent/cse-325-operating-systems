@@ -1,6 +1,7 @@
 #include "types.h"
 #include "stat.h"
 #include "user.h"
+#define PGSIZE 4096
 
 struct balance {
     char name[32];
@@ -45,11 +46,14 @@ int main(int argc, char *argv[]) {
   void *s1, *s2;
   int t1, t2, r1, r2;
 
-  s1 = malloc(4096);
-  s2 = malloc(4096);
+  s1 = malloc(PGSIZE);
+  s2 = malloc(PGSIZE);
 
-  t1 = thread_create(do_work, s1, (void*)&b1);
-  t2 = thread_create(do_work, s2, (void*)&b2); 
+  printf(1, "s1 can be found at %x to %x.\n", s1, s1+PGSIZE);
+  printf(1, "s2 can be found at %x to %x.\n", s2, s2+PGSIZE);
+printf(1, "s1 can be found at %x to %x.\n", s1, s1+PGSIZE);
+  t1 = thread_create(&do_work, s1, (void*)&b1);
+  t2 = thread_create(&do_work, s2, (void*)&b2); 
 
   r1 = thread_join();
   r2 = thread_join();
