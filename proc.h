@@ -50,7 +50,7 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   void *ustack;                // User stack for threads [CSE325 LAB 4]
-  int reference_count;         // Reference count for threads [CSE325 LAB 4]
+  int *reference_count;         // Reference count for threads [CSE325 LAB 4]
   int highPriorityTime;        // Added in
   int lowPriorityTime;         // Added in
   int mutex;
