@@ -8,13 +8,6 @@
 #include "spinlock.h"
 #include "sleeplock.h"
 
-struct 
-{
-  struct spinlock sl;
-  int pid;  
-} locker;
-
-
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
