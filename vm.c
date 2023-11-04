@@ -344,6 +344,41 @@ bad:
   return 0;
 }
 
+// Given a parent process's page table, create a copy (on write)
+// of it for a child.
+pde_t*
+copyuvm_cow(pde_t *pgdir, uint sz)
+{
+  pde_t *d;
+  pte_t *pte;
+  uint pa, i, flags;
+  // char *mem;
+  // no need to reallocate
+
+  if((d = setupkvm()) == 0)
+    return 0;
+  for(i = 0; i < sz; i += PGSIZE){
+    if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
+      panic("copyuvm: pte should exist");
+    if(!(*pte & PTE_P))
+      panic("copyuvm: page not present");
+    *pte &= ~PTE_W; // make page table unwriteable
+    pa = PTE_ADDR(*pte);
+    flags = PTE_FLAGS(*pte);
+    if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0) {
+      goto bad;
+    }
+    incrementRefCount(pa);
+  }
+  lcr3(V2P(pgdir)); // Flush TLB
+  return d;
+
+bad:
+  freevm(d);
+  lcr3(V2P(pgdir)); // Flush again
+  return 0;
+}
+
 //PAGEBREAK!
 // Map user virtual address to kernel address.
 char*
@@ -383,6 +418,54 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
     va = va0 + PGSIZE;
   }
   return 0;
+}
+
+void handle_pgflt(void) {
+  uint va = rcr2(); // obtain virtual address
+  struct proc* curproc = myproc();
+  pte_t* pte = walkpgdir(curproc->pgdir, (void*) va, 0);
+  char* mem;
+
+  // check for invalid accesses
+
+  // check if virtual address is greater than KERNBASE
+  if (va > KERNBASE) {
+    // kill process and panic with an error message "virtual address is greater than KERNBASE"
+    panic("virtual address is greater than KERNBASE");
+  } else if (pte == 0) {
+    // kill process and panic with an error message
+    panic("pte is NULL");
+  } else if (! (*pte & PTE_P)) {
+    // kill process and panic with an error message
+    panic("page is not present in memory");
+  } else if (! (*pte & PTE_U)) {
+    // kill process and panic with an error message
+    panic("page is not a user page");
+  } else if (! (*pte & PTE_W)) {
+    // kill process and panic with an error message
+    panic("page is not writable and not shared");
+  } else { // allocate new page (copy on write)
+    
+    // get physical address from page table entry
+    uint pa = 0; // TODO: get physical address
+    if (getRefCount(pa) > 1) {
+      // check allocation
+      if ((mem = kalloc()) == 0) {
+        panic("out of memory");
+      }
+      // copy memory space
+      // point the page table entry to the new page
+      // set the page table flags
+      // call decrementRefCount
+    }
+
+    if (getRefCount(pa) == 1) {
+      // remove write restriction
+    }
+  }
+
+  // flush cache
+  lcr3(V2P(curproc->pgdir));
 }
 
 //PAGEBREAK!
