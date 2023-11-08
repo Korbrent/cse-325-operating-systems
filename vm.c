@@ -448,19 +448,28 @@ void handle_pgflt(void) {
     
     // get physical address from page table entry
     uint pa = 0; // TODO: get physical address
+    pa = PTE_ADDR(*pte);
     if (getRefCount(pa) > 1) {
       // check allocation
       if ((mem = kalloc()) == 0) {
         panic("out of memory");
       }
       // copy memory space
+      memmove(mem, (char*)P2V(pa), PGSIZE);
+
       // point the page table entry to the new page
+      *pte = V2P(mem);
+
       // set the page table flags
+      *pte |= PTE_P | PTE_U | PTE_W;
+
       // call decrementRefCount
+      decrementRefCount(pa);
     }
 
     if (getRefCount(pa) == 1) {
       // remove write restriction
+      *pte |= PTE_W;
     }
   }
 
