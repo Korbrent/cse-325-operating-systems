@@ -433,18 +433,23 @@ void handle_pgflt(void) {
   if (va > KERNBASE) {
     // kill process and panic with an error message "virtual address is greater than KERNBASE"
     panic("virtual address is greater than KERNBASE");
+    kill(curproc->pid);
   } else if (pte == 0) {
     // kill process and panic with an error message
     panic("pte is NULL");
+    kill(curproc->pid);
   } else if (! (*pte & PTE_P)) {
     // kill process and panic with an error message
     panic("page is not present in memory");
+    kill(curproc->pid);
   } else if (! (*pte & PTE_U)) {
     // kill process and panic with an error message
     panic("page is not a user page");
+    kill(curproc->pid);
   } else if (! (*pte & PTE_W)) {
     // kill process and panic with an error message
     panic("page is not writable and not shared");
+    kill(curproc->pid);
   } else { // allocate new page (copy on write)
     
     // get physical address from page table entry
