@@ -446,7 +446,7 @@ void handle_pgflt(void) {
     // kill process and panic with an error message
     panic("page is not a user page");
     kill(curproc->pid);
-  } else if (! (*pte & PTE_W)) {
+  } else if ((*pte & PTE_W)) {
     // kill process and panic with an error message
     panic("page is not writable and not shared");
     kill(curproc->pid);
@@ -467,7 +467,7 @@ void handle_pgflt(void) {
       *pte = V2P(mem);
 
       // set the page table flags
-      *pte |= PTE_P | PTE_U | PTE_W;
+      *pte = *pte | PTE_P | PTE_U | PTE_W;
 
       // call decrementRefCount
       decrementRefCount(pa);
