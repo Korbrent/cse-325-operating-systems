@@ -467,7 +467,7 @@ void handle_pgflt(void) {
       *pte = V2P(mem);
 
       // set the page table flags
-      *pte = *pte | PTE_P | PTE_U | PTE_W;
+      *pte |= PTE_P | PTE_U | PTE_W;
 
       // call decrementRefCount
       decrementRefCount(pa);
