@@ -395,6 +395,41 @@ bmap(struct inode *ip, uint bn)
     brelse(bp);
     return addr;
   }
+  bn -= NINDIRECT;
+  // handle double indirect block
+  if(bn < NINDIRECT * NINDIRECT){
+    if((addr = ip->addrs[NDIRECT + 1]) == 0)
+      ip->addrs[NDIRECT + 1] = addr = balloc(ip->dev);
+    bp = bread(ip->dev, addr);
+    a = (uint*)bp->data;
+
+    // Calculate entry index
+    uint entry = bn / NINDIRECT;
+
+    // Calculate offset index
+    uint offset = bn % NINDIRECT;
+
+    // Load second level of table and allocate if necessary
+    if((addr = a[entry]) == 0){
+      a[entry] = addr = balloc(ip->dev);
+      log_write(bp);
+    }
+    brelse(bp);
+
+    // Get the double indirect for second level
+    bp = bread(ip->dev, addr);
+    a = (uint*)bp->data;
+
+    // Check if offset index exists
+    if((addr = a[offset]) == 0){
+      a[offset] = addr = balloc(ip->dev);
+      log_write(bp);
+    }
+    brelse(bp);
+
+    return addr;
+  }
+
 
   panic("bmap: out of range");
 }
